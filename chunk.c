@@ -75,7 +75,9 @@ int write_constant(struct chunk *c, value_t val, int line)
 
         write_chunk(c, idx1, line);
         write_chunk(c, idx2, line);
-        write_chunk(c, idx3, line); 
+        write_chunk(c, idx3, line);
+
+        return const_idx; 
 }
 
 int get_line_number(struct chunk *c, int offset)
