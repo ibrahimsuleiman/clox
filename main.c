@@ -13,6 +13,8 @@ int main(int argc, char *argv[])
         write_chunk(&chunk, idx, 111); /*write the index of the constant*/
         write_chunk(&chunk, OP_RETURN, 112);
 
+        write_constant(&chunk, 1.3456, 102);
+        write_chunk(&chunk, OP_RETURN, 130);
 
         disassemble_chunk(&chunk, "test chunk");
 
