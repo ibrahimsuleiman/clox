@@ -5,7 +5,7 @@
 #include"memory.h"
 
 
-static void expand_if_necessary(struct chunk *c);
+
 void init_chunk(struct chunk *c)
 {
         c->count = 0;
@@ -34,7 +34,7 @@ void write_chunk(struct chunk *c, uint8_t byte, int line)
 
 
         }
-        
+
         if(c->curr_line + 2 >= c->lines_capacity) {
                 int old = c->lines_capacity;
                 c->lines_capacity = GROW_CAPACITY(old);
