@@ -7,6 +7,7 @@
 typedef enum {
         OP_RETURN,
         OP_CONSTANT,
+        OP_CONSTANT_LONG,
 } op_code;
 
 struct chunk {
@@ -26,6 +27,7 @@ void free_chunk(struct chunk *c);
 void write_chunk(struct chunk *c, uint8_t byte, int line);
 /* returns the index where val was added*/
 int add_constant(struct chunk *c, value_t val);
+int write_constant(struct chunk *c, value_t val, int line);
 /*given the offset of an instruction, return it's line number*/
 int get_line_number(struct chunk *c, int offset);
 

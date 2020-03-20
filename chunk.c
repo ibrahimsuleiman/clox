@@ -64,6 +64,20 @@ int add_constant(struct chunk *c, value_t val)
 }
 
 
+int write_constant(struct chunk *c, value_t val, int line)
+{
+        write_chunk(c, OP_CONSTANT_LONG, line);
+        int const_idx = add_constant(c, val);
+        /* write the index of the constant as a 24 bit integer*/
+        uint8_t idx1 = (const_idx >> 16) & 0xff;
+        uint8_t idx2 = (const_idx >> 8) & 0xff;
+        uint8_t idx3 =  const_idx & 0xff;
+
+        write_chunk(c, idx1, line);
+        write_chunk(c, idx2, line);
+        write_chunk(c, idx3, line); 
+}
+
 int get_line_number(struct chunk *c, int offset)
 {       
         if(!c || !c->lines) 
