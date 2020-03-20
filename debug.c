@@ -30,11 +30,13 @@ int disassemble_instruction(struct chunk *c, int offset)
         printf("%04d ", offset);
         uint8_t instr = c->code[offset];
 
-        if(offset > 0 && c->lines[offset] == c->lines[offset - 1]) {
-                printf("   |");
+        if(offset > 0 && 
+                get_line_number(c, offset) == get_line_number(c, offset - 1)) {
+                printf("   | ");
         } else {
-                printf("%4d ", c->lines[offset]);
+                printf("%4d ", get_line_number(c, offset));
         }
+        
         switch(instr) {
                 case OP_RETURN:
                         return simple_instruction("OP_RETURN", offset);
@@ -44,4 +46,5 @@ int disassemble_instruction(struct chunk *c, int offset)
                         printf("Unknown opcode %d\n", instr);
                         return offset + 1;
         }
+        
 }
