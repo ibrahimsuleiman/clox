@@ -16,13 +16,15 @@ int main(int argc, char *argv[])
         write_chunk(&chunk, OP_CONSTANT, 1);
         write_chunk(&chunk, idx, 2); /*write the index of the constant*/
         write_constant(&chunk, 1.3456, 102);
+
         write_chunk(&chunk, OP_NEGATE, 3);
 
         write_chunk(&chunk, OP_DIV, 3);
 
-        write_chunk(&chunk, OP_RETURN, 131);
         
-
+        write_chunk(&chunk, OP_NEGATE, 3);
+        write_chunk(&chunk, OP_RETURN, 6);
+        
         interpret_vm(&clox, &chunk);
 
         free_chunk(&chunk);

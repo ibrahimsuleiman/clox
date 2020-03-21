@@ -31,8 +31,6 @@ void write_chunk(struct chunk *c, uint8_t byte, int line)
                 int old = c->capacity;
                 c->capacity = GROW_CAPACITY(old);
                 c->code = GROW_ARRAY(c->code, uint8_t, old, c->capacity);
-
-
         }
 
         if(c->curr_line + 2 >= c->lines_capacity) {
@@ -53,8 +51,7 @@ void write_chunk(struct chunk *c, uint8_t byte, int line)
                 c->lines[c->curr_line] = line;
                 c->lines[c->curr_line + 1]++;
 
-        }
-        
+        }     
 }
 
 int add_constant(struct chunk *c, value_t val)
@@ -92,6 +89,5 @@ int get_line_number(struct chunk *c, int offset)
                 i += 2;
                 tally += c->lines[i - 1];
         }
-
         return c->lines[i - 2]; 
 }
