@@ -1,33 +1,88 @@
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
 #include"common.h"
 #include"chunk.h"
 #include"debug.h"
 #include"vm.h"
 
-int main(int argc, char *argv[])
+
+static void repl(struct vm *vm)
 {
-        
+        char line[1024];
+
+        for(;;) {
+                printf("> ");
+
+
+                if(!fgets(line, sizeof(line), stdin)) {
+                        printf("\n");
+                        break;
+                }   
+                interpret_vm(vm, line);
+        }
+}
+
+static char *read_file(const char *path)
+{
+        FILE *file = fopen(path, "rb");
+
+        if(!file){
+                fprintf(stderr, "Couldn't open file \"%s\".", path);
+                exit(74);
+        }
+
+        fseek(file, 0L, SEEK_END);
+        size_t file_size = ftell(file);
+        rewind(file);
+
+        char *buf = malloc(file_size + 1);
+
+        if(!buf) {
+                fprintf(stderr, "Not enough memory to read\n");
+                exit(74);
+        }
+        size_t bytes_read = fread(buf, sizeof(char), file_size, file);
+
+        if(bytes_read < file_size) {
+                fprintf(stderr, "Couldn't read file\n");
+                exit(74);
+        }
+        buf[bytes_read] = '\0';
+
+        fclose(file);
+        return buf;
+}
+
+static void run_file(struct vm *vm, const char *path)
+{       
+        char *source = read_file(path);
+        interpret_result_t r = interpret_vm(vm, source);
+        free(source);
+
+        if(r == INTERPRET_COMPILE_ERROR) 
+                exit(65);
+        if(r == INTERPRET_RUNTIME_ERROR)
+                exit(70);
+}
+
+
+
+
+int main(int argc, char *argv[])
+{               
         struct vm clox;
         init_vm(&clox);
 
-        struct chunk chunk;
-        init_chunk(&chunk);
+        if(argc == 1){
+                repl(&clox);
+        } else if(argc == 2) {
+                run_file(&clox, argv[1]);
+        } else {
+                fprintf(stderr,"Usage: clox [path]\n");
+                exit(64);
+        }
 
-        int idx = add_constant(&chunk, 1.33);
-        write_chunk(&chunk, OP_CONSTANT, 1);
-        write_chunk(&chunk, idx, 2); /*write the index of the constant*/
-        write_constant(&chunk, 1.3456, 102);
-
-        write_chunk(&chunk, OP_NEGATE, 3);
-
-        write_chunk(&chunk, OP_DIV, 3);
-
-        
-        write_chunk(&chunk, OP_NEGATE, 3);
-        write_chunk(&chunk, OP_RETURN, 6);
-        
-        interpret_vm(&clox, &chunk);
-
-        free_chunk(&chunk);
         free_vm(&clox);
 
         return 0;
