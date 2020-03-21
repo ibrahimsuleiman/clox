@@ -54,7 +54,7 @@ int disassemble_instruction(struct chunk *c, int offset)
                 case OP_RETURN:
                         return simple_instruction("OP_RETURN", offset);
                 case OP_CONSTANT:
-                        return constant_instruction("OP_CONSTANT", c, offset);\
+                        return constant_instruction("OP_CONSTANT", c, offset);
                 case OP_CONSTANT_LONG:
                         return long_constant_instruction("OP_CONSTANT_LONG", c, offset);
                 case OP_NEGATE:

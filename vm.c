@@ -98,12 +98,14 @@ interpret_result_t interpret_vm(struct vm *vm, struct chunk *c)
 /* Error checking? */
 void push(struct vm *vm, value_t val)
 {
+        assert(1 + (int)(vm->stack_top - vm->stack) <= STACK_MAX);
         *vm->stack_top = val;
         vm->stack_top++;
 }
 
 value_t pop(struct vm *vm)
 {       
+        assert(vm->stack_top - vm->stack >= 0);
         vm->stack_top--;
         return *vm->stack_top;
 }

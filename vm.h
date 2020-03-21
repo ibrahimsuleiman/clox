@@ -15,8 +15,8 @@ struct vm {
 
 typedef enum {
         INTERPRET_OK,
-        INTERPRETE_COMPILE_ERROR,
-        INTERPRETE_RUNTIME_ERROR,
+        INTERPRET_COMPILE_ERROR,
+        INTERPRET_RUNTIME_ERROR,
 
 }interpret_result_t;
 
