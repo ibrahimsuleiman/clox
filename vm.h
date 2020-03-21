@@ -22,7 +22,7 @@ typedef enum {
 
 void init_vm(struct vm *vm);
 void free_vm(struct vm *vm);
-interpret_result_t interpret_vm(struct vm *vm, struct chunk *c);
+interpret_result_t interpret_vm(struct vm *vm, const char *src);
 
 void push(struct vm *vm, value_t val);
 value_t pop(struct vm *vm);

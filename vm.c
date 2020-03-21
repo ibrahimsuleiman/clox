@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include"vm.h"
 #include"common.h"
+#include"compiler.h"
 #include"debug.h"
 
 
@@ -88,11 +89,10 @@ void free_vm(struct vm *vm)
 
 }
 
-interpret_result_t interpret_vm(struct vm *vm, struct chunk *c)
+interpret_result_t interpret_vm(struct vm *vm, const char *src)
 {
-        vm->chunk = c;
-        vm->ip = c->code;
-        return run_vm(vm, vm->ip);
+        compile(src);
+        return INTERPRET_OK;
 }
 
 /* Error checking? */
