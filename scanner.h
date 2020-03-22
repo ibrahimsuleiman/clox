@@ -38,14 +38,14 @@ typedef enum {
 
 } token_type_t;
 
-typedef struct {
+struct token{
         token_type_t type;
         int line;
         int length;
         const char *start;
-}token_t;
+};
 
 void init_scanner(struct scanner *s, const char *src);
-token_t scan_token(struct scanner *s);
+struct token scan_token(struct scanner *s);
 
 #endif

@@ -10,7 +10,7 @@ void compile(const char *src)
         
         int line = -1;
         for(;;) {
-                token_t token = scan_token(&s);
+                struct token token = scan_token(&s);
                 if(line != token.line) {
                         printf("%4d ", token.line);
                         line = token.line;

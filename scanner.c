@@ -15,9 +15,9 @@ static bool is_at_end(struct scanner *s)
         return s->current[-1] == '\0';
 }
 
-static token_t make_token(struct scanner *s, token_type_t type)
+static struct token make_token(struct scanner *s, token_type_t type)
 {
-        token_t token;
+        struct token token;
         token.start = s->start;
         token.type = type;
         token.length = (s->current - s->start);
@@ -26,9 +26,9 @@ static token_t make_token(struct scanner *s, token_type_t type)
         return token;
 }
 
-static token_t error_token(struct scanner *s,const char * message)
+static struct token error_token(struct scanner *s,const char * message)
 {
-        token_t token;
+        struct token token;
 
         token.line = s->line;
         token.start = message;
@@ -107,7 +107,7 @@ static void skip_white_space_and_comments(struct scanner *s)
 }
 
 
-static token_t string(struct scanner *s)
+static struct token string(struct scanner *s)
 {
         while(!is_at_end(s) && peek(s) != '"') {
                 if(peek(s) == '\n') s->line++;
@@ -121,7 +121,7 @@ static token_t string(struct scanner *s)
 
 }
 
-static token_t number(struct scanner *s)
+static struct token number(struct scanner *s)
 {
         while(is_digit(peek(s))) advance(s);
 
@@ -202,14 +202,14 @@ static token_type_t identifier_type(struct scanner *s)
         return TOKEN_IDENTIFIER;
 }
 
-static token_t identifier(struct scanner *s)
+static struct token identifier(struct scanner *s)
 {
         while(is_alpha(peek(s)) || is_digit(peek(s))) advance(s);
 
         return make_token(s, identifier_type(s));
 }
 
-token_t scan_token(struct scanner *s)
+struct token scan_token(struct scanner *s)
 { 
         skip_white_space_and_comments(s);
 
