@@ -45,7 +45,7 @@ struct token{
         const char *start;
 };
 
-void init_scanner(struct scanner *s, const char *src);
-struct token scan_token(struct scanner *s);
+void init_scanner(const char *src);
+struct token scan_token();
 
 #endif
