@@ -7,7 +7,7 @@
 #include"vm.h"
 
 
-static void repl(struct vm *vm)
+static void repl()
 {
         char line[1024];
 
@@ -19,7 +19,7 @@ static void repl(struct vm *vm)
                         printf("\n");
                         break;
                 }   
-                interpret_vm(vm, line);
+                interpret_vm(line);
         }
 }
 
@@ -54,10 +54,10 @@ static char *read_file(const char *path)
         return buf;
 }
 
-static void run_file(struct vm *vm, const char *path)
+static void run_file(const char *path)
 {       
         char *source = read_file(path);
-        interpret_result_t r = interpret_vm(vm, source);
+        interpret_result_t r = interpret_vm(source);
         free(source);
 
         if(r == INTERPRET_COMPILE_ERROR) 
@@ -71,19 +71,19 @@ static void run_file(struct vm *vm, const char *path)
 
 int main(int argc, char *argv[])
 {               
-        struct vm clox;
-        init_vm(&clox);
+
+        init_vm();
 
         if(argc == 1){
-                repl(&clox);
+                repl();
         } else if(argc == 2) {
-                run_file(&clox, argv[1]);
+                run_file(argv[1]);
         } else {
                 fprintf(stderr,"Usage: clox [path]\n");
                 exit(64);
         }
 
-        free_vm(&clox);
+        free_vm();
 
         return 0;
 }
