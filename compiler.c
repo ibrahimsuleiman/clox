@@ -5,12 +5,12 @@
 
 void compile(const char *src)
 {       
-        struct scanner s;
-        init_scanner(&s, src);
+
+        init_scanner(src);
         
         int line = -1;
         for(;;) {
-                struct token token = scan_token(&s);
+                struct token token = scan_token();
                 if(line != token.line) {
                         printf("%4d ", token.line);
                         line = token.line;
