@@ -20,12 +20,12 @@ typedef enum {
 
 }interpret_result_t;
 
-void init_vm(struct vm *vm);
-void free_vm(struct vm *vm);
-interpret_result_t interpret_vm(struct vm *vm, const char *src);
+void init_vm();
+void free_vm();
+interpret_result_t interpret_vm(const char *c);
 
-void push(struct vm *vm, value_t val);
-value_t pop(struct vm *vm);
+void push(value_t val);
+value_t pop();
 
 
 #endif
