@@ -23,4 +23,4 @@ main.o: chunk.h common.h vm.h
 
 .PHONY : clean
 clean:
-	rm $(OBJECTS) clox
+	rm $(OBJECTS) 
