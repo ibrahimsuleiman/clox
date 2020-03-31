@@ -1,6 +1,5 @@
 
 #include<stdlib.h>
-
 #include"chunk.h"
 #include"memory.h"
 
@@ -53,6 +52,7 @@ void write_chunk(struct chunk *c, uint8_t byte, int line)
 
         }     
 }
+
 
 int add_constant(struct chunk *c, value_t val)
 {
