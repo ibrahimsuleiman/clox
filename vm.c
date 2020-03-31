@@ -11,7 +11,7 @@ static inline void reset_stack()
         vm.stack_top = vm.stack;
 }
 
-static interpret_result_t run_vm(uint8_t *code)
+static interpret_result_t run_vm()
 {       
 
 #define READ_BYTE() (*vm.ip++)
@@ -92,8 +92,20 @@ void free_vm()
 
 interpret_result_t interpret_vm(const char *src)
 {
-        compile(src);
-        return INTERPRET_OK;
+        struct chunk chunk;
+        init_chunk(&chunk);
+
+        if(!compile(src, &chunk)){
+                free_chunk(&chunk);
+                return INTERPRET_COMPILE_ERROR;
+        }
+
+        vm.chunk = &chunk;
+        vm.ip = chunk.code;
+
+        interpret_result_t r =  run_vm();
+
+        return r;
 }
 
 /* Error checking? */
