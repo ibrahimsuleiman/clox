@@ -5,6 +5,9 @@
 #include"chunk.h"
 
 
-void compile(const char *src);
+
+
+
+bool compile(const char *src, struct chunk *chunk);
 
 #endif
