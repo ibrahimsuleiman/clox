@@ -28,6 +28,11 @@ void write_value_array(struct value_array *v, value_t val)
         v->count++;
 }
 
+void undo_previous_write(struct value_array *v)
+{
+       v->count--;
+}
+
 void print_value(value_t val)
 {
         printf("%g", val);
