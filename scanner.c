@@ -31,13 +31,13 @@ static struct token make_token(token_type_t type)
 
 static struct token error_token(const char * message)
 {
+        
         struct token token;
 
         token.line = scanner.line;
         token.start = message;
         token.length = strlen(message);
         token.type = TOKEN_ERROR;
-
         return token;
 }
 
