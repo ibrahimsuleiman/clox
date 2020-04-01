@@ -105,10 +105,11 @@ interpret_result_t interpret_vm(const char *src)
 
         interpret_result_t r =  run_vm();
 
+        free_chunk(&chunk);
+
         return r;
 }
 
-/* Error checking? */
 void push(value_t val)
 {
         assert(1 + (int)(vm.stack_top - vm.stack) <= STACK_MAX);
