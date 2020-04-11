@@ -44,11 +44,9 @@ struct parse_rule {
 };
 
 
-static void expression();                          
-static struct parse_rule *get_rule(token_type_t type);         
+static void expression();
+static struct parse_rule *get_rule(token_type_t type);
 static void parse_precedence(precedence_t precedence);
-
-
 
 
 static struct chunk *current_chunk()
@@ -102,25 +100,31 @@ static void error(const char *msg)
 {
         error_at(&parser.previous, msg);
 }
-static uint8_t make_constant(value_t val)
+
+static int make_constant(value_t val)
 {
         int c = add_constant(current_chunk(), val);
 
         if(c > UINT8_MAX) {
-                undo_previous_write(&current_chunk()->constants);
+                /* undo the 2 bytes written : OP_CONSTANT and const index*/
+                undo_last_write_to_chunk(current_chunk());
+                undo_last_write_to_chunk(current_chunk());
+                /* remove the constant*/
+                undo_previous_write(&(current_chunk()->constants));
                 c = write_constant(current_chunk(), val, parser.previous.line);
 
-                if(c > INT_MAX) {
+                if(c > MAX_CONST_INDEX) {
                         error("Too many constants in one chunk.");
                 }
         }
 
-        return (uint8_t)c;
+        return c;
 }
 
 static void emit_constant(double val)
 {
-        emit_2_bytes(OP_CONSTANT, make_constant(val));
+        emit_byte(OP_CONSTANT);
+        emit_byte(make_constant(val));
 }
 
 
@@ -132,12 +136,12 @@ static void emit_return()
 static void advance()
 {
         parser.previous = parser.current;
-        
+
         for(;;){
                 parser.current = scan_token();
                 if(parser.current.type != TOKEN_ERROR)
                         break;
-                
+
 
                 error_at_current(parser.current.start);
         }
@@ -179,7 +183,7 @@ static void grouping()
 
 static void expression()
 {
-       parse_precedence(PREC_ASSIGNMENT); 
+       parse_precedence(PREC_ASSIGNMENT);
 }
 
 static void unary()
@@ -203,47 +207,47 @@ static void number()
         emit_constant(val);
 }
 
-struct parse_rule rules[] = {                                              
-  { grouping, NULL,    PREC_NONE },       /* TOKEN_LEFT_PAREN         */   
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_RIGHT_PAREN        */     
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_LEFT_BRACE         */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_RIGHT_BRACE        */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_COMMA              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_DOT                */ 
-  { unary,    binary,  PREC_TERM },       /* TOKEN_MINUS              */ 
-  { NULL,     binary,  PREC_TERM },       /* TOKEN_PLUS               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_SEMICOLON          */ 
-  { NULL,     binary,  PREC_FACTOR },     /* TOKEN_SLASH              */ 
-  { NULL,     binary,  PREC_FACTOR },     /* TOKEN_STAR               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_BANG               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_BANG_EQUAL         */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_EQUAL              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_EQUAL_EQUAL        */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_GREATER            */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_GREATER_EQUAL      */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_LESS               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_LESS_EQUAL         */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_IDENTIFIER         */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_STRING             */ 
-  { number,   NULL,    PREC_NONE },       /* TOKEN_NUMBER             */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_AND                */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_CLASS              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_ELSE               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FALSE              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FOR                */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FUN                */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_IF                 */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_NIL                */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_OR                 */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_PRINT              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_RETURN             */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_SUPER              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_THIS               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_TRUE               */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_VAR                */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_WHILE              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_ERROR              */ 
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_EOF                */ 
+struct parse_rule rules[] = {
+  { grouping, NULL,    PREC_NONE },       /* TOKEN_LEFT_PAREN         */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_RIGHT_PAREN        */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_LEFT_BRACE         */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_RIGHT_BRACE        */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_COMMA              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_DOT                */
+  { unary,    binary,  PREC_TERM },       /* TOKEN_MINUS              */
+  { NULL,     binary,  PREC_TERM },       /* TOKEN_PLUS               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_SEMICOLON          */
+  { NULL,     binary,  PREC_FACTOR },     /* TOKEN_SLASH              */
+  { NULL,     binary,  PREC_FACTOR },     /* TOKEN_STAR               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_BANG               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_BANG_EQUAL         */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_EQUAL              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_EQUAL_EQUAL        */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_GREATER            */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_GREATER_EQUAL      */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_LESS               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_LESS_EQUAL         */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_IDENTIFIER         */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_STRING             */
+  { number,   NULL,    PREC_NONE },       /* TOKEN_NUMBER             */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_AND                */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_CLASS              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_ELSE               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FALSE              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FOR                */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FUN                */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_IF                 */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_NIL                */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_OR                 */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_PRINT              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_RETURN             */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_SUPER              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_THIS               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_TRUE               */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_VAR                */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_WHILE              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_ERROR              */
+  { NULL,     NULL,    PREC_NONE },       /* TOKEN_EOF                */
 };
 
 
@@ -277,15 +281,15 @@ static void parse_precedence(precedence_t prec)
 
 
         while (prec <= get_rule(parser.current.type)->precedence) {
-                advance();                                                    
-                parse_fn infix_rule = get_rule(parser.previous.type)->infix;     
-                infix_rule();                                                 
+                advance();
+                parse_fn infix_rule = get_rule(parser.previous.type)->infix;
+                infix_rule();
         }
 }
 
 
 bool compile(const char *src, struct chunk *chunk)
-{       
+{
         parser.had_error = false;
         parser.panic_mode = false;
         compiling_chunk = chunk;
@@ -299,4 +303,3 @@ bool compile(const char *src, struct chunk *chunk)
 
         return !parser.had_error;
 }
-
