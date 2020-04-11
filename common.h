@@ -11,4 +11,6 @@
 #define DEBUG_TRACE_EXECUTION
 #define DEBUG_PRINT_CODE
 
+#define MAX_CONST_INDEX  16777216
+
 #endif
