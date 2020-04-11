@@ -30,6 +30,7 @@ struct chunk {
 void init_chunk(struct chunk *c);
 void free_chunk(struct chunk *c);
 void write_chunk(struct chunk *c, uint8_t byte, int line);
+void undo_last_write_to_chunk(struct chunk *c);
 /* returns the index where val was added*/
 int add_constant(struct chunk *c, value_t val);
 int write_constant(struct chunk *c, value_t val, int line);

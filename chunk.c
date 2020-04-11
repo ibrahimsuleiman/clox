@@ -53,6 +53,12 @@ void write_chunk(struct chunk *c, uint8_t byte, int line)
         }     
 }
 
+void undo_last_write_to_chunk(struct chunk *c)
+{
+        if(c->count > 0) {
+                c->count--;
+        }       
+}
 
 int add_constant(struct chunk *c, value_t val)
 {
@@ -60,7 +66,9 @@ int add_constant(struct chunk *c, value_t val)
         return c->constants.count - 1;
 }
 
-
+/* Write more constant to the constant pool
+*  The maximum number of constants is 2^24
+*/
 int write_constant(struct chunk *c, value_t val, int line)
 {
         write_chunk(c, OP_CONSTANT_LONG, line);
