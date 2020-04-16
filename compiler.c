@@ -106,16 +106,18 @@ static int make_constant(value_t val)
         int c = add_constant(current_chunk(), val);
 
         if(c > UINT8_MAX) {
-                /* undo the 2 bytes written : OP_CONSTANT and const index*/
-                undo_last_write_to_chunk(current_chunk());
+                /* undo the last byte written : OP_CONSTANT*/
                 undo_last_write_to_chunk(current_chunk());
                 /* remove the constant*/
                 undo_previous_write(&(current_chunk()->constants));
+                /*re-write as a long constant*/
                 c = write_constant(current_chunk(), val, parser.previous.line);
 
                 if(c > MAX_CONST_INDEX) {
                         error("Too many constants in one chunk.");
                 }
+        } else {
+                emit_byte(c);
         }
 
         return c;
@@ -124,7 +126,7 @@ static int make_constant(value_t val)
 static void emit_constant(double val)
 {
         emit_byte(OP_CONSTANT);
-        emit_byte(make_constant(val));
+        make_constant(val);     /* second byte emitted from make_constant*/
 }
 
 
