@@ -126,7 +126,7 @@ static int make_constant(value_t val)
 static void emit_constant(double val)
 {
         emit_byte(OP_CONSTANT);
-        make_constant(val);     /* second byte emitted from make_constant*/
+        make_constant(NUMBER(val));     /* second byte emitted from make_constant*/
 }
 
 
@@ -198,6 +198,9 @@ static void unary()
                 case TOKEN_MINUS:
                         emit_byte(OP_NEGATE);
                         break;
+                case TOKEN_BANG:
+                        emit_byte(OP_NOT);
+                        break;
                 default:
                         return;
         }
@@ -207,6 +210,23 @@ static void number()
 {
         double val = strtod(parser.previous.start, NULL);
         emit_constant(val);
+}
+
+static void literal()
+{
+        switch(parser.previous.type) {
+                case TOKEN_FALSE:
+                        emit_byte(OP_FALSE);
+                        break;
+                case TOKEN_TRUE:
+                        emit_byte(OP_TRUE);
+                        break;
+                case TOKEN_NIL:
+                        emit_byte(TOKEN_NIL);
+                        break;
+                default:
+                        return;
+        }
 }
 
 struct parse_rule rules[] = {
@@ -221,7 +241,7 @@ struct parse_rule rules[] = {
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_SEMICOLON          */
   { NULL,     binary,  PREC_FACTOR },     /* TOKEN_SLASH              */
   { NULL,     binary,  PREC_FACTOR },     /* TOKEN_STAR               */
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_BANG               */
+  { unary,     NULL,    PREC_NONE },       /* TOKEN_BANG               */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_BANG_EQUAL         */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_EQUAL              */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_EQUAL_EQUAL        */
@@ -235,17 +255,17 @@ struct parse_rule rules[] = {
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_AND                */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_CLASS              */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_ELSE               */
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_FALSE              */
+  { literal,     NULL,    PREC_NONE },       /* TOKEN_FALSE              */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_FOR                */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_FUN                */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_IF                 */
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_NIL                */
+  { literal,     NULL,    PREC_NONE },       /* TOKEN_NIL                */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_OR                 */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_PRINT              */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_RETURN             */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_SUPER              */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_THIS               */
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_TRUE               */
+  { literal,     NULL,    PREC_NONE },       /* TOKEN_TRUE               */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_VAR                */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_WHILE              */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_ERROR              */
