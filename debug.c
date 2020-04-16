@@ -67,6 +67,14 @@ int disassemble_instruction(struct chunk *c, int offset)
                         return simple_instruction("OP_MULT", offset);
                 case OP_DIV:
                         return simple_instruction("OP_DIV", offset);
+                case OP_FALSE:
+                        return simple_instruction("OP_FALSE", offset);
+                case OP_TRUE:
+                        return simple_instruction("OP_TRUE", offset);
+                case OP_NIL:
+                        return simple_instruction("OP_NIL", offset);
+                case OP_NOT:
+                        return simple_instruction("OP_NOT", offset);
                 default:
                         printf("Unknown opcode %d\n", instr);
                         return offset + 1;

@@ -7,12 +7,16 @@
 typedef enum {
         OP_RETURN,
         OP_CONSTANT,
+        OP_NIL,
+        OP_FALSE,
+        OP_TRUE,
         OP_CONSTANT_LONG,
         OP_NEGATE,
         OP_ADD,
         OP_SUB,
         OP_MULT,
-        OP_DIV
+        OP_DIV,
+        OP_NOT,
 } op_code;
 
 struct chunk {
