@@ -74,6 +74,7 @@ static interpret_result_t run_vm()
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_CONSTANT_LONG
 #undef BINARY_OP
 
 }
