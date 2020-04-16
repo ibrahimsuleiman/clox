@@ -35,5 +35,16 @@ void undo_previous_write(struct value_array *v)
 
 void print_value(value_t val)
 {
-        printf("%g", val);
+        switch(val.type) {
+                case VAL_BOOL:
+                        printf("%s", AS_BOOL(val) ? "true" : "false");
+                        break;
+                case VAL_NUMBER:
+                        printf("%g", AS_NUMBER(val));
+                        break;
+                case VAL_NIL:
+                        printf("%s", "nil");
+                        break;
+        }
+        
 }
