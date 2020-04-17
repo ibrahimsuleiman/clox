@@ -118,6 +118,17 @@ static interpret_result_t run_vm()
                 case OP_NOT:
                         push(BOOL(is_falsy(pop())));
                         break;
+                case OP_EQUAL: {
+                        value_t a = pop();
+                        value_t b = pop();
+
+                        push(BOOL(values_equal(a, b)));
+                        break;
+                }
+                case OP_GREATER:
+                        OP_BINARY(BOOL, >); break;
+                case OP_LESS:
+                        OP_BINARY(BOOL, <); break;
                 }
         }
 
