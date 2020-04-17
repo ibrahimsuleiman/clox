@@ -2,6 +2,19 @@
 #include"memory.h"
 
 
+bool values_equal(value_t a, value_t b)
+{
+        if(a.type != b.type) return false;
+        switch(a.type) {
+                case VAL_BOOL:
+                        return AS_BOOL(a) == AS_BOOL(b);
+                case VAL_NUMBER:
+                        return AS_NUMBER(a) == AS_NUMBER(b);
+                case VAL_NIL:
+                        return true;
+        }
+}
+
 void init_value_array(struct value_array *v)
 {
         v->capacity = 0;
@@ -48,3 +61,4 @@ void print_value(value_t val)
         }
         
 }
+

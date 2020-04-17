@@ -41,6 +41,7 @@ struct value_array {
         value_t *values;
 };
 
+bool values_equal(value_t a, value_t b);
 void init_value_array(struct value_array *v);
 void free_value_array(struct value_array *v);
 void write_value_array(struct value_array *v, value_t val);
