@@ -75,6 +75,12 @@ int disassemble_instruction(struct chunk *c, int offset)
                         return simple_instruction("OP_NIL", offset);
                 case OP_NOT:
                         return simple_instruction("OP_NOT", offset);
+                case OP_EQUAL:
+                        return simple_instruction("OP_EQUAL", offset);
+                case OP_GREATER:
+                        return simple_instruction("OP_GREATER", offset);
+                case OP_LESS:
+                        return simple_instruction("OP_LESS", offset);
                 default:
                         printf("Unknown opcode %d\n", instr);
                         return offset + 1;

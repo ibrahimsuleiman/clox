@@ -17,6 +17,10 @@ typedef enum {
         OP_MULT,
         OP_DIV,
         OP_NOT,
+        OP_EQUAL,
+        OP_GREATER,
+        OP_LESS,
+        
 } op_code;
 
 struct chunk {
