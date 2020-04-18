@@ -1,4 +1,4 @@
-OBJECTS = chunk.o main.o memory.o debug.o value.o vm.o compiler.o scanner.o
+OBJECTS = chunk.o main.o memory.o debug.o value.o vm.o compiler.o scanner.o object.o
 CCFLAGS = -Wall
 CC = gcc
 
@@ -8,6 +8,8 @@ all: $(OBJECTS)
 chunk.o: chunk.h common.h
 
 debug.o: debug.h common.h chunk.h
+
+object.o: object.h vm.h value.h memory.h
 
 memory.o: memory.h common.h
 
