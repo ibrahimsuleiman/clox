@@ -1,4 +1,6 @@
-OBJECTS = chunk.o main.o memory.o debug.o value.o vm.o compiler.o scanner.o object.o
+OBJECTS = chunk.o main.o memory.o debug.o value.o vm.o \
+compiler.o scanner.o object.o table.o
+
 CCFLAGS = -Wall
 CC = gcc
 
@@ -20,6 +22,8 @@ vm.o: vm.h common.h chunk.h value.h compiler.h
 compiler.o: common.h compiler.h scanner.h
 
 scanner.o: scanner.h common.h
+
+table.o: table.h value.h memory.h object.h
 
 main.o: chunk.h common.h vm.h
 
