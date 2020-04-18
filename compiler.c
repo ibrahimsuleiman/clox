@@ -104,7 +104,7 @@ static void error(const char *msg)
 static int make_constant(value_t val)
 {
         int c = add_constant(current_chunk(), val);
-
+        
         if(c > UINT8_MAX) {
                 /* undo the last byte written : OP_CONSTANT*/
                 undo_last_write_to_chunk(current_chunk());
@@ -117,16 +117,17 @@ static int make_constant(value_t val)
                         error("Too many constants in one chunk.");
                 }
         } else {
+                
                 emit_byte(c);
         }
 
         return c;
 }
 
-static void emit_constant(double val)
+static void emit_constant(value_t val)
 {
         emit_byte(OP_CONSTANT);
-        make_constant(NUMBER(val));     /* second byte emitted from make_constant*/
+        make_constant(val);     /* second byte emitted from make_constant*/
 }
 
 
@@ -215,7 +216,7 @@ static void unary()
 static void number()
 {
         double val = strtod(parser.previous.start, NULL);
-        emit_constant(val);
+        emit_constant(NUMBER(val));
 }
 
 static void literal()
@@ -233,6 +234,14 @@ static void literal()
                 default:
                         return;
         }
+}
+
+static void string()
+{
+        char *s = (char *)(parser.previous.start + 1); /* advance past the " mark*/
+        int l = parser.previous.length - 2;
+        emit_constant(OBJ(copy_string(s, l)));
+
 }
 
 struct parse_rule rules[] = {
@@ -256,7 +265,7 @@ struct parse_rule rules[] = {
   { NULL,     binary,    PREC_COMPARISON },       /* TOKEN_LESS               */
   { NULL,     binary,    PREC_COMPARISON },       /* TOKEN_LESS_EQUAL         */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_IDENTIFIER         */
-  { NULL,     NULL,    PREC_NONE },       /* TOKEN_STRING             */
+  { string,     NULL,    PREC_NONE },       /* TOKEN_STRING             */
   { number,   NULL,    PREC_NONE },       /* TOKEN_NUMBER             */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_AND                */
   { NULL,     NULL,    PREC_NONE },       /* TOKEN_CLASS              */
