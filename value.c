@@ -1,3 +1,5 @@
+#include<string.h>
+#include"object.h"
 #include"value.h"
 #include"memory.h"
 
@@ -12,6 +14,13 @@ bool values_equal(value_t a, value_t b)
                         return AS_NUMBER(a) == AS_NUMBER(b);
                 case VAL_NIL:
                         return true;
+                case VAL_OBJECT: {
+                        obj_string_t *as = AS_STRING(a);
+                        obj_string_t *bs = AS_STRING(b);
+                        return  as->length == bs->length && 
+                                memcmp(as->chars, bs->chars, sizeof(char) * as->length);
+                }
+
         }
 }
 
@@ -58,6 +67,8 @@ void print_value(value_t val)
                 case VAL_NIL:
                         printf("%s", "nil");
                         break;
+                case VAL_OBJECT:
+                        print_object(val); break;
         }
         
 }
