@@ -11,6 +11,7 @@ struct vm {
         uint8_t *ip;                    /* instruction pointer */
         value_t stack[STACK_MAX];       /* the virtual machine's stack*/
         value_t *stack_top;             /* the top of the vm's stack */
+        struct obj *objects;            /* head of list of objects to be tracked by vm*/
 };
 
 typedef enum {
@@ -20,6 +21,7 @@ typedef enum {
 
 }interpret_result_t;
 
+extern struct vm vm;
 void init_vm();
 void free_vm();
 interpret_result_t interpret_vm(const char *c);

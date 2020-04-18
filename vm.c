@@ -1,9 +1,12 @@
 #include<stdio.h>
+#include<string.h>
 #include<stdarg.h>
 #include"vm.h"
 #include"common.h"
 #include"debug.h"
 #include"compiler.h"
+#include"object.h"
+#include"memory.h"
 
 struct vm vm;
 
@@ -35,6 +38,22 @@ static void runtime_error(const char *format, ...)
 static bool is_falsy(value_t v)
 {
         return (IS_NIL(v) || (IS_BOOL(v) && !(AS_BOOL(v))));
+}
+
+static void concatenate()
+{
+        obj_string_t *a = AS_STRING(pop());
+        obj_string_t *b = AS_STRING(pop());
+
+        int len = a->length + b->length;
+        char *chars = ALLOCATE(char, len + 1);
+        memcpy(chars,b->chars, b->length);
+        memcpy(chars + b->length, a->chars, a->length);
+        chars[len] = '\0';
+
+        obj_string_t *r = take_string(chars, len);    
+        push(OBJ(r));
+
 }
 
 static interpret_result_t run_vm()
@@ -99,7 +118,19 @@ static interpret_result_t run_vm()
                         push(NUMBER(-AS_NUMBER(pop())));
                         break;
                 case OP_ADD:
-                        OP_BINARY(NUMBER, +); break;
+                        if(IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                                concatenate();
+                                break;
+                        } else if(IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                                double a = AS_NUMBER(pop());
+                                double b = AS_NUMBER(pop());
+
+                                push(NUMBER(a + b));
+                                break;
+                        } else {
+                                runtime_error("Operands must be two numbers or two strings");
+                                return INTERPRET_RUNTIME_ERROR;
+                        }
                 case OP_SUB:
                         OP_BINARY(NUMBER, -); break;
                 case OP_MULT:
@@ -143,12 +174,14 @@ void init_vm()
 {
         vm.chunk = NULL;
         vm.ip = NULL;
+        vm.objects = NULL;
         reset_stack();
 }
 
+
 void free_vm()
 {
-
+        free_objects();
 }
 
 interpret_result_t interpret_vm(const char *src)
