@@ -7,15 +7,17 @@ typedef enum {
         OBJ_STRING,
 } obj_type_t;
 
+/*lox object: all lox objects inherit from this struct*/
 struct obj {
         obj_type_t type;
         struct obj *next;
 };
 
 struct obj_string {
-        struct obj obj;
-        int length;
-        char *chars;
+        struct obj obj; /* base class struct obj*/
+        int length;     /* string length */
+        char *chars;    /* character array */
+        uint32_t hash;  /* cache the hash of string objects for quick lookup*/
 };
 
 typedef struct obj_string obj_string_t;
