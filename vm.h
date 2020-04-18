@@ -3,6 +3,7 @@
 
 #include"chunk.h"
 #include"value.h"
+#include"table.h"
 
 #define STACK_MAX 256
 
@@ -12,6 +13,7 @@ struct vm {
         value_t stack[STACK_MAX];       /* the virtual machine's stack*/
         value_t *stack_top;             /* the top of the vm's stack */
         struct obj *objects;            /* head of list of objects to be tracked by vm*/
+        struct table strings;           /* hash table of interned strings */
 };
 
 typedef enum {

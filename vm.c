@@ -175,6 +175,7 @@ void init_vm()
         vm.chunk = NULL;
         vm.ip = NULL;
         vm.objects = NULL;
+        init_table(&vm.strings);
         reset_stack();
 }
 
@@ -182,6 +183,7 @@ void init_vm()
 void free_vm()
 {
         free_objects();
+        free_table(&vm.strings);
 }
 
 interpret_result_t interpret_vm(const char *src)
