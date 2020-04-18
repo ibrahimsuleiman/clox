@@ -14,12 +14,9 @@ bool values_equal(value_t a, value_t b)
                         return AS_NUMBER(a) == AS_NUMBER(b);
                 case VAL_NIL:
                         return true;
-                case VAL_OBJECT: {
-                        obj_string_t *as = AS_STRING(a);
-                        obj_string_t *bs = AS_STRING(b);
-                        return  as->length == bs->length && 
-                                memcmp(as->chars, bs->chars, sizeof(char) * as->length);
-                }
+                case VAL_OBJECT:
+                        return AS_OBJ(a) == AS_OBJ(b);
+                
 
         }
 }
