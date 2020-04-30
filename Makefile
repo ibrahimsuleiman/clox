@@ -1,7 +1,7 @@
 OBJECTS = chunk.o main.o memory.o debug.o value.o vm.o \
 compiler.o scanner.o object.o table.o
 
-CCFLAGS = -Wall
+CCFLAGS = -Wall -g
 CC = gcc
 
 all: $(OBJECTS)
