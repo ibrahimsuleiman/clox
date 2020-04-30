@@ -83,7 +83,7 @@ bool table_set(struct table *t, obj_string_t *key, value_t value)
 	}
 	struct entry *e = find_entry(t->entries, t->capacity, key);
 
-	bool is_new_key = (e == NULL);
+	bool is_new_key = (e->key == NULL);
 
 	if (is_new_key && IS_NIL(e->value))
 		t->count++; /* only increment where there are no tombstones*/
@@ -96,8 +96,9 @@ bool table_set(struct table *t, obj_string_t *key, value_t value)
 
 bool table_get(struct table *t, obj_string_t *key, value_t *value)
 {
-	if (t->count == 0)
+	if (t->count == 0) {
 		return false; /* empty? */
+	}
 
 	struct entry *e = find_entry(t->entries, t->capacity, key);
 
