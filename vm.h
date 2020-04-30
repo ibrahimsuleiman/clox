@@ -14,6 +14,7 @@ struct vm {
 	value_t *stack_top; /* the top of the vm's stack */
 	struct obj *objects; /* head of list of objects to be tracked by vm*/
 	struct table strings; /* hash table of interned strings */
+	struct table globals; /* hash table for global variables */
 };
 
 typedef enum {
