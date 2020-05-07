@@ -12,5 +12,6 @@
 #define DEBUG_PRINT_CODE
 
 #define MAX_CONST_INDEX 16777216
+#define UINT8_COUNT UINT8_MAX + 1
 
 #endif

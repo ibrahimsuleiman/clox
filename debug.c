@@ -16,6 +16,13 @@ static int constant_instruction(const char *name, struct chunk *c, int offset)
 	return offset + 2;
 }
 
+static int byte_instruction(const char *name, struct chunk *c, int offset)
+{
+	uint8_t slot = c->code[offset + 1];
+	printf("%-16s %4d\n", name, slot);
+	return offset + 2;
+}
+
 static int long_constant_instruction(const char *name, struct chunk *c,
 				     int offset)
 {
@@ -90,6 +97,10 @@ int disassemble_instruction(struct chunk *c, int offset)
 		return constant_instruction("OP_GET_GLOBAL", c, offset);
 	case OP_SET_GLOBAL:
 		return constant_instruction("OP_SET_GLOBAL", c, offset);
+	case OP_GET_LOCAL:
+		return byte_instruction("OP_GET_LOCAL", c,  offset);
+	case OP_SET_LOCAL:
+		return byte_instruction("OP_GET_LOCAL", c, offset);
 	default:
 		printf("Unknown opcode %d\n", instr);
 		return offset + 1;
