@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "scanner.h"
 #include "compiler.h"
 #include "value.h"
@@ -41,11 +42,29 @@ struct parse_rule {
 	precedence_t precedence;
 };
 
+struct local {
+	struct token name;
+	int depth;
+};
+
+struct compiler {
+	struct local locals[UINT8_COUNT];
+	int local_count;
+	int scope_depth;
+};
+
+struct compiler *current = NULL;
+
+
+
 static void expression();
 static void statement();
 static void declaration();
 static struct parse_rule *get_rule(token_type_t type);
 static void parse_precedence(precedence_t precedence);
+
+static void end_scope();
+static void begin_scope();
 
 static struct chunk *current_chunk()
 {
@@ -132,6 +151,13 @@ static void emit_constant(value_t val)
 	emit_byte(OP_CONSTANT);
 	emit_byte(make_constant(val)); /* second byte emitted from
 					  make_constant*/
+}
+
+static void init_compiler(struct compiler *compiler)
+{
+	compiler->scope_depth = 0;
+	compiler->local_count = 0;
+	current = compiler;
 }
 
 static void emit_return()
@@ -228,6 +254,15 @@ static void expression()
 	parse_precedence(PREC_ASSIGNMENT);
 }
 
+static void block()
+{
+	while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+		declaration();
+	}
+
+	consume(TOKEN_RIGHT_BRACE, "Expected '}' after block");
+}
+
 static void expression_statement()
 {
 	expression();
@@ -247,7 +282,7 @@ static void synchronize()
 	parser.panic_mode = false;
 
 	while (parser.current.type != TOKEN_EOF) {
-		if (parser.previous.type = TOKEN_SEMICOLON)
+		if (parser.previous.type == TOKEN_SEMICOLON)
 			return;
 
 		switch (parser.current.type) {
@@ -276,16 +311,89 @@ static uint8_t identifier_constant(struct token *name)
 		OBJ(copy_string((char *)name->start, name->length)));
 }
 
+static bool identifiers_equal(struct token *a, struct token *b)
+{
+	if (a->length != b->length)
+		return false;
+	return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static int resolve_local(struct compiler *c, struct token *name)
+{
+	/*We walk backwards to ensure variables with the same name
+	in upper scopes are masked*/
+	for (int i = c->local_count - 1; i >= 0; i--) {
+		
+		struct local *l = &c->locals[i];
+		if (identifiers_equal(&l->name, name)) {
+
+			if (l->depth == -1)
+				error("Cannot read local variable in its own initializer");
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+static void add_local(struct token name)
+{
+
+	if (current->local_count == UINT8_COUNT) {
+		error("Too many local variables in function");
+		return;
+	}
+	struct local *l = &current->locals[current->local_count++];
+	/* don't worry about lifetime here. The source buffer is alive all
+	 * through compilation*/
+	l->name = name; 
+	l->depth = -1; /*special sentinel value; variable is in scope but not ready for use*/
+
+}
+
+static void declare_variable()
+{
+	struct token *name = &parser.previous;
+
+	for (int i = current->local_count - 1; i > 0; --i) {
+		struct local *l = &current->locals[i];
+		if (l->depth != -1 && l->depth < current->scope_depth)
+			break;
+
+		if (identifiers_equal(name, &l->name))
+			error("Variable with this name has been declared in this scope");
+	}
+	if (current->scope_depth == 0)
+		return;
+	
+	add_local(*name);
+}
+
 /* todo: address case of 24-bit constant indices*/
 static uint8_t parse_variable(const char *errmsg)
 {
 	consume(TOKEN_IDENTIFIER, errmsg);
+	declare_variable();
+	if (current->scope_depth > 0)
+		return 0;
 	return identifier_constant(&parser.previous);
+}
+
+static void mark_initialized()
+{
+	current->locals[current->local_count - 1].depth = current->scope_depth;
 }
 
 /* todo: address case of 24-bit constant indices*/
 static void define_variable(uint8_t global)
 {
+	/*local variables are not created at runtime*/
+	/*they land right on top of the stack, where we want them*/
+	if (current->scope_depth > 0) {
+		mark_initialized();
+		return;
+	}
+
 	emit_2_bytes(OP_DEFINE_GLOBAL, global);
 }
 
@@ -320,6 +428,10 @@ static void statement()
 {
 	if (match(TOKEN_PRINT)) {
 		print_statement();
+	} else if (match(TOKEN_LEFT_BRACE)) {
+		begin_scope();
+		block();
+		end_scope();
 	} else {
 		expression_statement();
 	}
@@ -376,13 +488,25 @@ static void string(bool can_assign)
 
 static void named_variable(struct token name, bool can_assign)
 {
-	uint8_t arg = identifier_constant(&name);
+	uint8_t get_op;
+	uint8_t set_op;
+
+	int arg = resolve_local(current, &name);
+	
+	if (arg != -1) {
+		get_op = OP_GET_LOCAL;
+		set_op = OP_GET_LOCAL;
+	} else {
+		arg = identifier_constant(&name);
+		get_op = OP_GET_GLOBAL;
+		set_op = OP_SET_GLOBAL;
+	}
 
 	if (can_assign && match(TOKEN_EQUAL)) {
 		expression();
-		emit_2_bytes(OP_SET_GLOBAL, arg);
+		emit_2_bytes(set_op, (uint8_t)arg);
 	} else {
-		emit_2_bytes(OP_GET_GLOBAL, arg);
+		emit_2_bytes(get_op, (uint8_t)arg);
 	}
 }
 
@@ -445,6 +569,23 @@ static void end_compiler()
 #endif
 }
 
+static void begin_scope()
+{
+	current->scope_depth++;
+}
+
+static void end_scope()
+{
+	
+	current->scope_depth--;
+	while (current->local_count > 0 &&
+	       current->locals[current->local_count - 1].depth >
+		       current->scope_depth) {
+		emit_byte(OP_POP); /*pop local variable off the stack at the end of lifetime*/
+		current->local_count--;
+	}
+}
+
 static struct parse_rule *get_rule(token_type_t type)
 {
 	return &rules[type];
@@ -481,6 +622,10 @@ bool compile(const char *src, struct chunk *chunk)
 	compiling_chunk = chunk;
 
 	init_scanner(src);
+
+	struct compiler compiler;
+	init_compiler(&compiler);
+
 	advance();
 
 	while (!match(TOKEN_EOF)) {
