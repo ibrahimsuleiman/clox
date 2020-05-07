@@ -98,7 +98,7 @@ int disassemble_instruction(struct chunk *c, int offset)
 	case OP_SET_GLOBAL:
 		return constant_instruction("OP_SET_GLOBAL", c, offset);
 	case OP_GET_LOCAL:
-		return byte_instruction("OP_GET_LOCAL", c,  offset);
+		return byte_instruction("OP_GET_LOCAL", c, offset);
 	case OP_SET_LOCAL:
 		return byte_instruction("OP_GET_LOCAL", c, offset);
 	default:

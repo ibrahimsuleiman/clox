@@ -197,23 +197,21 @@ static interpret_result_t run_vm()
 			}
 
 			break;
-		} 
+		}
 
 		case OP_GET_LOCAL: {
-
 			uint8_t slot = READ_BYTE();
 			push(vm.stack[slot]);
 			break;
-		
 		}
 
 		case OP_SET_LOCAL: {
-			/* we don't pop: result of asgnt is the expr on the left*/
+			/* we don't pop: result of asgnt is the expr on the
+			 * left*/
 			uint8_t slot = READ_BYTE();
 			vm.stack[slot] = peek(0);
 			break;
 		}
-
 		}
 	}
 

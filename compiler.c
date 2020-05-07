@@ -55,8 +55,6 @@ struct compiler {
 
 struct compiler *current = NULL;
 
-
-
 static void expression();
 static void statement();
 static void declaration();
@@ -323,10 +321,8 @@ static int resolve_local(struct compiler *c, struct token *name)
 	/*We walk backwards to ensure variables with the same name
 	in upper scopes are masked*/
 	for (int i = c->local_count - 1; i >= 0; i--) {
-		
 		struct local *l = &c->locals[i];
 		if (identifiers_equal(&l->name, name)) {
-
 			if (l->depth == -1)
 				error("Cannot read local variable in its own initializer");
 			return i;
@@ -338,7 +334,6 @@ static int resolve_local(struct compiler *c, struct token *name)
 
 static void add_local(struct token name)
 {
-
 	if (current->local_count == UINT8_COUNT) {
 		error("Too many local variables in function");
 		return;
@@ -346,9 +341,9 @@ static void add_local(struct token name)
 	struct local *l = &current->locals[current->local_count++];
 	/* don't worry about lifetime here. The source buffer is alive all
 	 * through compilation*/
-	l->name = name; 
-	l->depth = -1; /*special sentinel value; variable is in scope but not ready for use*/
-
+	l->name = name;
+	l->depth = -1; /*special sentinel value; variable is in scope but not
+			  ready for use*/
 }
 
 static void declare_variable()
@@ -365,7 +360,7 @@ static void declare_variable()
 	}
 	if (current->scope_depth == 0)
 		return;
-	
+
 	add_local(*name);
 }
 
@@ -492,7 +487,7 @@ static void named_variable(struct token name, bool can_assign)
 	uint8_t set_op;
 
 	int arg = resolve_local(current, &name);
-	
+
 	if (arg != -1) {
 		get_op = OP_GET_LOCAL;
 		set_op = OP_GET_LOCAL;
@@ -576,12 +571,12 @@ static void begin_scope()
 
 static void end_scope()
 {
-	
 	current->scope_depth--;
 	while (current->local_count > 0 &&
 	       current->locals[current->local_count - 1].depth >
 		       current->scope_depth) {
-		emit_byte(OP_POP); /*pop local variable off the stack at the end of lifetime*/
+		emit_byte(OP_POP); /*pop local variable off the stack at the end
+				      of lifetime*/
 		current->local_count--;
 	}
 }
