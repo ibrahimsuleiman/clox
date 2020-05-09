@@ -42,6 +42,8 @@ void disassemble_chunk(struct chunk *c, const char *name)
 
 	for (int offset = 0; offset < c->count;)
 		offset = disassemble_instruction(c, offset);
+	
+	printf("\n");
 }
 
 int disassemble_instruction(struct chunk *c, int offset)
