@@ -490,7 +490,7 @@ static void named_variable(struct token name, bool can_assign)
 
 	if (arg != -1) {
 		get_op = OP_GET_LOCAL;
-		set_op = OP_GET_LOCAL;
+		set_op = OP_SET_LOCAL;
 	} else {
 		arg = identifier_constant(&name);
 		get_op = OP_GET_GLOBAL;

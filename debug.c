@@ -102,7 +102,7 @@ int disassemble_instruction(struct chunk *c, int offset)
 	case OP_GET_LOCAL:
 		return byte_instruction("OP_GET_LOCAL", c, offset);
 	case OP_SET_LOCAL:
-		return byte_instruction("OP_GET_LOCAL", c, offset);
+		return byte_instruction("OP_SET_LOCAL", c, offset);
 	default:
 		printf("Unknown opcode %d\n", instr);
 		return offset + 1;
