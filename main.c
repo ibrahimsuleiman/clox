@@ -18,7 +18,6 @@ static void repl()
 			break;
 		}
 
-		line[strlen(line) - 1] = '\0';
 		interpret_vm(line);
 	}
 }

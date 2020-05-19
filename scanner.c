@@ -13,7 +13,7 @@ void init_scanner(const char *src)
 
 static bool is_at_end()
 {
-	return scanner.current[-1] == '\0';
+	return scanner.current[0] == '\0';
 }
 
 static struct token make_token(token_type_t type)
