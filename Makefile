@@ -1,11 +1,13 @@
 OBJECTS = chunk.o main.o memory.o debug.o value.o vm.o \
 compiler.o scanner.o object.o table.o
 
-CCFLAGS = -Wall -g
+CFLAGS =-Wall
+CFLAGS += -g
+
 CC = gcc
 
 all: $(OBJECTS)
-	$(CC) -o clox $(OBJECTS)
+	$(CC) -o clox $(OBJECTS) $(CFLAGS)
 
 chunk.o: chunk.h common.h
 
