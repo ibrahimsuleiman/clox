@@ -17,7 +17,6 @@ static void repl()
 			printf("\n");
 			break;
 		}
-
 		interpret_vm(line);
 	}
 }

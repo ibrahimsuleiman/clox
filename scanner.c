@@ -212,6 +212,9 @@ struct token scan_token()
 
 	scanner.start = scanner.current;
 
+	if (is_at_end())
+		return make_token(TOKEN_EOF);
+
 	char c = advance();
 
 	switch (c) {
@@ -250,8 +253,6 @@ struct token scan_token()
 		return string();
 	}
 
-	if (is_at_end())
-		return make_token(TOKEN_EOF);
 	if (is_alpha(c))
 		return identifier();
 	if (is_digit(c))
