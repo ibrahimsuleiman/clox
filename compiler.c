@@ -47,7 +47,17 @@ struct local {
 	int depth;
 };
 
+typedef enum {
+	TYPE_FUNCTION,
+	TYPE_SCRIPT,
+} function_type_t;
+
 struct compiler {
+	struct compiler *enclosing; /* linked-list of compilers for each nested
+				       function - nodes are not dynamically
+				       allocated*/
+	obj_function_t *function; /* currently compiling function */
+	function_type_t type; /* script or actual function*/
 	struct local locals[UINT8_COUNT];
 	int local_count;
 	int scope_depth;
@@ -67,7 +77,7 @@ static void begin_scope();
 
 static struct chunk *current_chunk()
 {
-	return compiling_chunk;
+	return &current->function->chunk;
 }
 
 static void emit_byte(uint8_t byte)
@@ -181,16 +191,53 @@ static void back_patch_jump(int offset)
 	current_chunk()->code[offset + 1] = (jmp)&0xff;
 }
 
-static void init_compiler(struct compiler *compiler)
-{
-	compiler->scope_depth = 0;
-	compiler->local_count = 0;
-	current = compiler;
-}
-
 static void emit_return()
 {
+	emit_byte(OP_NIL); /*functions without a return stmt implicitly return
+			      nil*/
 	emit_byte(OP_RETURN);
+}
+
+static void init_compiler(struct compiler *compiler, function_type_t type)
+{
+	/* capture the current surrounding function's compiler*/
+	compiler->enclosing = current;
+
+	compiler->function = NULL;
+	compiler->type = type;
+
+	compiler->scope_depth = 0;
+	compiler->function = new_function();
+	compiler->local_count = 0;
+	current = compiler;
+
+	/* claim stack slot 0 for vm's internal use*/
+	struct local *local = &current->locals[current->local_count++];
+	local->depth = 0;
+	local->name.start = "";
+	local->name.length = 0;
+
+	if (type != TYPE_SCRIPT)
+		current->function->name = copy_string(parser.previous.start,
+						      parser.previous.length);
+}
+
+static obj_function_t *end_compiler()
+{
+	emit_return();
+	obj_function_t *func = current->function;
+
+#ifdef DEBUG_PRINT_CODE
+	if (!parser.had_error) {
+		disassemble_chunk(current_chunk(), func->name != NULL ?
+							   func->name->chars :
+							   "<script>");
+	}
+#endif
+
+	/* restore the surrounding function's compiler*/
+	current = current->enclosing;
+	return func;
 }
 
 static void advance()
@@ -499,6 +546,10 @@ static uint8_t parse_variable(const char *errmsg)
 
 static void mark_initialized()
 {
+	/* nothing to mark initialized in top-level fun decls*/
+	if (current->scope_depth == 0)
+		return;
+
 	current->locals[current->local_count - 1].depth = current->scope_depth;
 }
 
@@ -513,6 +564,51 @@ static void define_variable(uint8_t global)
 	}
 
 	emit_2_bytes(OP_DEFINE_GLOBAL, global);
+}
+
+static void function(function_type_t type)
+{
+	struct compiler compiler;
+	init_compiler(&compiler, type);
+
+	begin_scope();
+
+	/* compile parameter list */
+	consume(TOKEN_LEFT_PAREN, "Expected '(' after function name.");
+	if (!check(TOKEN_RIGHT_PAREN)) {
+		do {
+			current->function->arity++;
+			if (current->function->arity > 255)
+				error_at_current(
+					"Cannot have more than 255 parameters.");
+
+			uint8_t param_const =
+				parse_variable("Expected parameter name.");
+			define_variable(param_const);
+
+		} while (match(TOKEN_COMMA));
+	}
+	consume(TOKEN_RIGHT_PAREN, "Expected ')' after function parameters.");
+
+	/* compile body */
+
+	consume(TOKEN_LEFT_BRACE, "Expected '{' before function body.");
+	block();
+
+	/* create function object*/
+	obj_function_t *func = end_compiler();
+	emit_2_bytes(OP_CONSTANT, make_constant(OBJ(func)));
+}
+
+static void fun_declaration()
+{
+	uint8_t global = parse_variable("Expected function name.");
+	/* unlike local variables, a function can refer to itself
+	in its own declaration. So, it can be safely marked as initialized
+	as soon as the name is parsed.*/
+	mark_initialized();
+	function(TYPE_FUNCTION);
+	define_variable(global);
 }
 
 static void and__(bool can_assign)
@@ -556,12 +652,27 @@ static void declaration()
 {
 	if (match(TOKEN_VAR)) {
 		var_declaration();
+	} else if (match(TOKEN_FUN)) {
+		fun_declaration();
 	} else {
 		statement();
 	}
 
 	if (parser.panic_mode)
 		synchronize();
+}
+
+static void return_statement()
+{
+	if (current->type == TYPE_SCRIPT)
+		error("return statement not allowed in top-level code");
+	if (match(TOKEN_SEMICOLON)) {
+		emit_return();
+	} else {
+		expression();
+		consume(TOKEN_SEMICOLON, "Expected ';' after return value.");
+		emit_byte(OP_RETURN);
+	}
 }
 
 static void statement()
@@ -580,6 +691,8 @@ static void statement()
 
 	} else if (match(TOKEN_FOR)) {
 		for_statement();
+	} else if (match(TOKEN_RETURN)) {
+		return_statement();
 	} else {
 		expression_statement();
 	}
@@ -663,8 +776,33 @@ static void variable(bool can_assign)
 	named_variable(parser.previous, can_assign);
 }
 
+static uint8_t argument_list()
+{
+	uint8_t argc = 0;
+
+	if (!check(TOKEN_RIGHT_PAREN)) {
+		do {
+			expression();
+			if (argc == 255)
+				error("Cannot have more than 255 arguments.");
+			argc++;
+
+		} while (match(TOKEN_COMMA));
+	}
+
+	consume(TOKEN_RIGHT_PAREN, "Expected ')' after function parameters.");
+
+	return argc;
+}
+
+static void call(bool can_assign)
+{
+	uint8_t argc = argument_list();
+	emit_2_bytes(OP_CALL, argc);
+}
+
 struct parse_rule rules[] = {
-	{ grouping, NULL, PREC_NONE }, /* TOKEN_LEFT_PAREN         */
+	{ grouping, call, PREC_CALL }, /* TOKEN_LEFT_PAREN         */
 	{ NULL, NULL, PREC_NONE }, /* TOKEN_RIGHT_PAREN        */
 	{ NULL, NULL, PREC_NONE }, /* TOKEN_LEFT_BRACE         */
 	{ NULL, NULL, PREC_NONE }, /* TOKEN_RIGHT_BRACE        */
@@ -705,17 +843,6 @@ struct parse_rule rules[] = {
 	{ NULL, NULL, PREC_NONE }, /* TOKEN_ERROR              */
 	{ NULL, NULL, PREC_NONE }, /* TOKEN_EOF                */
 };
-
-static void end_compiler()
-{
-	emit_return();
-
-#ifdef DEBUG_PRINT_CODE
-	if (!parser.had_error) {
-		disassemble_chunk(current_chunk(), "code");
-	}
-#endif
-}
 
 static void begin_scope()
 {
@@ -763,16 +890,15 @@ static void parse_precedence(precedence_t prec)
 		error("Invalid assignment target.");
 }
 
-bool compile(const char *src, struct chunk *chunk)
+obj_function_t *compile(const char *src)
 {
 	parser.had_error = false;
 	parser.panic_mode = false;
-	compiling_chunk = chunk;
 
 	init_scanner(src);
 
 	struct compiler compiler;
-	init_compiler(&compiler);
+	init_compiler(&compiler, TYPE_SCRIPT);
 
 	advance();
 
@@ -780,7 +906,6 @@ bool compile(const char *src, struct chunk *chunk)
 		declaration();
 	}
 
-	end_compiler();
-
-	return !parser.had_error;
+	obj_function_t *function = end_compiler();
+	return parser.had_error ? NULL : function;
 }

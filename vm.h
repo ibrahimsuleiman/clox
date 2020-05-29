@@ -2,14 +2,22 @@
 #define CLOX_VM_H
 
 #include "chunk.h"
+#include "object.h"
 #include "value.h"
 #include "table.h"
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (UINT8_MAX * FRAMES_MAX)
+
+struct call_frame {
+	obj_function_t *function;
+	uint8_t *ip;
+	value_t *slots;
+};
 
 struct vm {
-	struct chunk *chunk; /* chunk of bytecode*/
-	uint8_t *ip; /* instruction pointer */
+	struct call_frame frames[FRAMES_MAX];
+	int frame_count;
 	value_t stack[STACK_MAX]; /* the virtual machine's stack*/
 	value_t *stack_top; /* the top of the vm's stack */
 	struct obj *objects; /* head of list of objects to be tracked by vm*/

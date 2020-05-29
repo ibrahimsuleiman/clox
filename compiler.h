@@ -5,6 +5,6 @@
 #include "chunk.h"
 #include "object.h"
 
-bool compile(const char *src, struct chunk *chunk);
+obj_function_t *compile(const char *src);
 
 #endif
