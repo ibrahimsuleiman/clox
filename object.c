@@ -10,11 +10,26 @@
 #define ALLOCATE_OBJ(type, obj_type) \
 	(type *)allocate_object(sizeof(type), obj_type)
 
+static void print_function(obj_function_t *f)
+{
+	if (f->name == NULL) {
+		printf("<script>");
+		return;
+	}
+	printf("<fn %s>", f->name->chars);
+}
+
 void print_object(value_t val)
 {
 	switch (OBJ_TYPE(val)) {
 	case OBJ_STRING:
 		printf("%s", AS_CSTRING(val));
+		break;
+	case OBJ_FUNCTION:
+		print_function(AS_FUNCTION(val));
+		break;
+	case OBJ_NATIVE:
+		printf("<native fn>");
 		break;
 	}
 }
@@ -28,6 +43,26 @@ static struct obj *allocate_object(size_t size, obj_type_t type)
 	vm.objects = obj;
 
 	return obj;
+}
+
+obj_native_t *new_native(native_fn_t function)
+{
+	obj_native_t *native_fn = ALLOCATE_OBJ(obj_native_t, OBJ_NATIVE);
+
+	native_fn->function = function;
+
+	return native_fn;
+}
+
+obj_function_t *new_function()
+{
+	obj_function_t *func = ALLOCATE_OBJ(obj_function_t, OBJ_FUNCTION);
+
+	func->arity = 0;
+	func->name = NULL;
+	init_chunk(&func->chunk);
+
+	return func;
 }
 
 static obj_string_t *allocate_string(char *chars, int length, uint32_t hash)
