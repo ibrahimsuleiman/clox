@@ -13,7 +13,7 @@ chunk.o: chunk.h common.h
 
 debug.o: debug.h common.h chunk.h
 
-object.o: object.h vm.h value.h memory.h
+object.o: object.h vm.h value.h memory.h chunk.h
 
 memory.o: memory.h common.h
 
