@@ -15,6 +15,10 @@ $ git clone https://github.com/ibrahimsuleiman/clox.git
 ```
 ./clox
 ```
+To run scripts, do
+```
+./clox [filename]
+```
 ## Lox Basics
 
  ### *Hello, World*
