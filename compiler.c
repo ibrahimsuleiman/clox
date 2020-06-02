@@ -342,7 +342,7 @@ static void expression_statement()
 {
 	expression();
 	consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
-	emit_byte(OP_POP);
+	emit_byte(OP_POPX);
 }
 
 static void if_statement()

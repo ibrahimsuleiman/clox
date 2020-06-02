@@ -103,6 +103,8 @@ int disassemble_instruction(struct chunk *c, int offset)
 		return simple_instruction("OP_PRINT", offset);
 	case OP_POP:
 		return simple_instruction("OP_POP", offset);
+	case OP_POPX:
+		return simple_instruction("OP_POPX", offset);
 	case OP_DEFINE_GLOBAL:
 		return constant_instruction("OP_DEFINE_GLOBAL", c, offset);
 	case OP_GET_GLOBAL:
