@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
@@ -14,6 +15,13 @@ struct vm vm;
 static value_t clock_native(int argc, value_t *args)
 {
 	return NUMBER((double)clock() / CLOCKS_PER_SEC);
+}
+
+/* return a random number btw 0 and 1*/
+static value_t rand_native(int argc, value_t *args)
+{
+	srand(time(NULL));
+	return NUMBER((double)(rand() % 1000) / 1000);
 }
 
 static inline void reset_stack()
@@ -260,6 +268,14 @@ static interpret_result_t run_vm()
 		case OP_POP:
 			pop();
 			break;
+		case OP_POPX: 
+			if(vm.repl_mode) {
+				print_value(pop());
+				printf("\n");
+			} else {
+				pop();
+			}
+			break;
 		case OP_DEFINE_GLOBAL: {
 			obj_string_t *name = READ_STRING();
 			table_set(&vm.globals, name, peek(0));
@@ -345,10 +361,12 @@ static interpret_result_t run_vm()
 void init_vm()
 {
 	vm.objects = NULL;
+	vm.repl_mode = false;
 	init_table(&vm.strings);
 	init_table(&vm.globals);
 	reset_stack();
 	define_native("clock", clock_native);
+	define_native("random", rand_native);
 }
 
 void free_vm()
