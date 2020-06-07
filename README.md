@@ -82,7 +82,27 @@ lox can be used as a calculator:
  > factorial(5)
  120
  ```
+  *Getting Input*
   
- 
+  
+```
+> var name = input("What is your name?");
+What is your name?
+Ibrahim
+> print("Hello, " + name);
+Hello, Ibrahim
+```
+The built-in `input` function always returns a string. To get numbers, we call the `toNumber` function.
+```
+> var n = toNumber(input("Enter a number:"));
+Enter a number:
+5
+> print(n);
+5
+> print(n * n);
+25
+```
+
+
   
   
