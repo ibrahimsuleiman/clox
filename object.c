@@ -45,11 +45,12 @@ static struct obj *allocate_object(size_t size, obj_type_t type)
 	return obj;
 }
 
-obj_native_t *new_native(native_fn_t function)
+obj_native_t *new_native(native_fn_t function, int arity)
 {
 	obj_native_t *native_fn = ALLOCATE_OBJ(obj_native_t, OBJ_NATIVE);
 
 	native_fn->function = function;
+	native_fn->arity = arity;
 
 	return native_fn;
 }

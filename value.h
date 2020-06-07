@@ -38,6 +38,7 @@ struct value_t {
 #define NUMBER(value) ((struct value_t){ VAL_NUMBER, { .number = value } })
 #define OBJ(obj) ((struct value_t){ VAL_OBJECT, { .object = (obj_t *)obj } })
 
+
 typedef struct value_t value_t;
 
 struct value_array {

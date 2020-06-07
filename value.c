@@ -16,6 +16,10 @@ bool values_equal(value_t a, value_t b)
 		return true;
 	case VAL_OBJECT:
 		return AS_OBJ(a) == AS_OBJ(b);
+	default:
+		/* just here to satisfy the compiler complaining about control
+		 * reaching end of non-void fn*/
+		return false;
 	}
 }
 

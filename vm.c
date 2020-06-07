@@ -11,17 +11,67 @@
 #include "memory.h"
 
 struct vm vm;
+static void runtime_error(const char *format, ...);
 
-static value_t clock_native(int argc, value_t *args)
+static bool clock_native(int argc, value_t *args, value_t *res)
 {
-	return NUMBER((double)clock() / CLOCKS_PER_SEC);
+	*res = NUMBER((double)clock() / CLOCKS_PER_SEC);
+	return true;
 }
 
 /* return a random number btw 0 and 1*/
-static value_t rand_native(int argc, value_t *args)
+static bool rand_native(int argc, value_t *args, value_t *res)
 {
 	srand(time(NULL));
-	return NUMBER((double)(rand() % 1000) / 1000);
+	*res = NUMBER((double)(rand() % 1000) / 1000);
+	return true;
+}
+
+static bool input_native(int argc, value_t *args, value_t *res)
+{
+	if (!IS_OBJ(args[0])) {
+		const char *errmsg = "Argument must be of type string object.";
+		*res = OBJ(copy_string((char *)errmsg, strlen(errmsg)));
+		return false;
+	}
+
+	if (AS_OBJ(args[0])->type != OBJ_STRING) {
+		const char *errmsg = "Argument must be of type string object.";
+		*res = OBJ(copy_string((char *)errmsg, strlen(errmsg)));
+		return false;
+	}
+
+	printf("%s\n", AS_CSTRING(args[0]));
+
+	char input[512];
+	scanf("%511s", input);
+
+	/*remove any trailing \n from buffer*/
+	while (getc(stdin) != '\n')
+		;
+
+	*res = OBJ(copy_string(input, strlen(input)));
+	return true;
+}
+
+static bool str_to_number_native(int argc, value_t *args, value_t *res)
+{
+	if (!IS_OBJ(args[0])) {
+		const char *errmsg = "Argument must be of type string object.";
+		*res = OBJ(copy_string((char *)errmsg, strlen(errmsg)));
+		return false;
+	}
+
+	if (AS_OBJ(args[0])->type != OBJ_STRING) {
+		const char *errmsg = "Argument must be of type string object.";
+		*res = OBJ(copy_string((char *)errmsg, strlen(errmsg)));
+		return false;
+	}
+
+	double d = strtod(AS_CSTRING(args[0]), NULL);
+	*res = NUMBER(d);
+
+	return true;
 }
 
 static inline void reset_stack()
@@ -64,10 +114,10 @@ static void runtime_error(const char *format, ...)
 	reset_stack();
 }
 
-static void define_native(const char *name, native_fn_t function)
+static void define_native(const char *name, native_fn_t function, int arity)
 {
-	push(OBJ(copy_string(name, (int)strlen(name))));
-	push(OBJ(new_native(function)));
+	push(OBJ(copy_string((char *)name, (int)strlen(name))));
+	push(OBJ(new_native(function, arity)));
 	table_set(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
 	pop();
 	pop();
@@ -95,20 +145,38 @@ static bool call(obj_function_t *f, uint8_t argc)
 	return true;
 }
 
-static bool call_value(value_t callee, uint8_t argc)
+static bool call_native(obj_native_t *native, int argc)
+{
+	if (native->arity != argc) {
+		runtime_error("Expected %d arguments but got %d", native->arity,
+			      argc);
+		return false;
+	}
+	native_fn_t fn = native->function;
+	value_t result;
+	bool status = fn(argc, vm.stack_top - argc, &result);
+
+	/*Native functions operate like so: if an error occurs,
+	the error message is stored
+	in the return value of the function
+	*/
+	if (!status) {
+		runtime_error(AS_CSTRING(result));
+		return false;
+	}
+	vm.stack_top -= argc + 1;
+	push(result);
+	return true;
+}
+
+static bool call_value(value_t callee, int argc)
 {
 	if (IS_OBJ(callee)) {
 		switch (OBJ_TYPE(callee)) {
 		case OBJ_FUNCTION:
 			return call(AS_FUNCTION(callee), argc);
-		case OBJ_NATIVE: {
-			native_fn_t native = AS_NATIVE(callee);
-			value_t result = native(argc, vm.stack_top - argc);
-			vm.stack_top -= argc + 1;
-			push(result);
-			return true;
-		}
-
+		case OBJ_NATIVE:
+			return call_native(AS_NATIVE(callee), argc);
 		default:
 			break;
 		}
@@ -268,8 +336,8 @@ static interpret_result_t run_vm()
 		case OP_POP:
 			pop();
 			break;
-		case OP_POPX: 
-			if(vm.repl_mode) {
+		case OP_POPX:
+			if (vm.repl_mode) {
 				print_value(pop());
 				printf("\n");
 			} else {
@@ -365,8 +433,10 @@ void init_vm()
 	init_table(&vm.strings);
 	init_table(&vm.globals);
 	reset_stack();
-	define_native("clock", clock_native);
-	define_native("random", rand_native);
+	define_native("clock", clock_native, 0);
+	define_native("random", rand_native, 0);
+	define_native("input", input_native, 1);
+	define_native("toNumber", str_to_number_native, 1);
 }
 
 void free_vm()

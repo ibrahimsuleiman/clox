@@ -218,8 +218,8 @@ static void init_compiler(struct compiler *compiler, function_type_t type)
 	local->name.length = 0;
 
 	if (type != TYPE_SCRIPT)
-		current->function->name = copy_string(parser.previous.start,
-						      parser.previous.length);
+		current->function->name = copy_string(
+			(char *)parser.previous.start, parser.previous.length);
 }
 
 static obj_function_t *end_compiler()

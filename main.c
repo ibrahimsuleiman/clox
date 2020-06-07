@@ -8,6 +8,7 @@
 
 static void repl()
 {
+	vm.repl_mode = true;
 	char line[1024];
 
 	for (;;) {

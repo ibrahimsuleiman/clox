@@ -34,11 +34,12 @@ struct obj_function {
 	obj_string_t *name; /* function name*/
 };
 
-typedef value_t (*native_fn_t)(int argc, value_t *args);
+typedef bool (*native_fn_t)(int argc, value_t *args, value_t *ret);
 
 struct obj_native {
 	struct obj obj;
 	native_fn_t function;
+	int arity;
 };
 
 typedef struct obj_native obj_native_t;
@@ -46,11 +47,11 @@ typedef struct obj_function obj_function_t;
 
 #define IS_NATIVE(value) is_obj_type(value, OBJ_NATIVE)
 #define IS_FUNCTION(value) is_obj_type(value, OBJ_FUNCTION)
-#define AS_NATIVE(value) (((obj_native_t *)AS_OBJ(value))->function)
+#define AS_NATIVE(value) (((obj_native_t *)AS_OBJ(value)))
 #define AS_FUNCTION(value) ((obj_function_t *)AS_OBJ(value))
 
 obj_function_t *new_function();
-obj_native_t *new_native();
+obj_native_t *new_native(native_fn_t function, int arity);
 
 #define OBJ_TYPE(value) (AS_OBJ((value))->type)
 #define IS_STRING(value) is_obj_type(value, OBJ_STRING)
